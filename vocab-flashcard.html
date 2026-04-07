@@ -1,0 +1,1030 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>單字卡練習</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #1a1a2e;
+    --paper: #f5f0e8;
+    --card: #fffdf8;
+    --accent: #c94f3a;
+    --accent2: #2d6a4f;
+    --muted: #8a8070;
+    --border: #d4cfc4;
+    --correct: #2d6a4f;
+    --wrong: #c94f3a;
+    --shadow: 4px 4px 0px #1a1a2e;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--paper);
+    color: var(--ink);
+    min-height: 100vh;
+    background-image:
+      radial-gradient(circle at 20% 80%, rgba(201,79,58,0.07) 0%, transparent 50%),
+      radial-gradient(circle at 80% 20%, rgba(45,106,79,0.07) 0%, transparent 50%);
+  }
+
+  header {
+    padding: 24px 32px;
+    border-bottom: 2px solid var(--ink);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--card);
+  }
+
+  header h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.6rem;
+    letter-spacing: -0.5px;
+  }
+
+  header h1 span { color: var(--accent); }
+
+  .word-count {
+    font-size: 0.8rem;
+    color: var(--muted);
+    font-weight: 500;
+    background: var(--paper);
+    border: 1.5px solid var(--border);
+    padding: 4px 12px;
+    border-radius: 20px;
+  }
+
+  /* NAV */
+  nav {
+    display: flex;
+    gap: 0;
+    padding: 0 32px;
+    border-bottom: 2px solid var(--ink);
+    background: var(--card);
+    overflow-x: auto;
+  }
+
+  nav button {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.82rem;
+    font-weight: 500;
+    padding: 12px 20px;
+    background: none;
+    border: none;
+    border-bottom: 3px solid transparent;
+    cursor: pointer;
+    color: var(--muted);
+    white-space: nowrap;
+    transition: all 0.15s;
+  }
+
+  nav button.active {
+    color: var(--ink);
+    border-bottom-color: var(--accent);
+  }
+
+  nav button:hover:not(.active) { color: var(--ink); }
+
+  /* MAIN */
+  main { max-width: 720px; margin: 0 auto; padding: 32px 20px; }
+
+  /* SECTIONS */
+  .section { display: none; }
+  .section.active { display: block; }
+
+  /* IMPORT PANEL */
+  .import-btn {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 600;
+    font-size: 0.9rem;
+    padding: 12px 24px;
+    background: var(--ink);
+    color: var(--paper);
+    border: 2px solid var(--ink);
+    border-radius: 6px;
+    cursor: pointer;
+    box-shadow: var(--shadow);
+    transition: all 0.1s;
+    margin-bottom: 24px;
+  }
+  .import-btn:hover { transform: translate(-2px,-2px); box-shadow: 6px 6px 0px var(--ink); }
+  .import-btn:active { transform: translate(2px,2px); box-shadow: 2px 2px 0px var(--ink); }
+
+  .import-panel {
+    display: none;
+    background: var(--card);
+    border: 2px solid var(--ink);
+    border-radius: 8px;
+    padding: 24px;
+    box-shadow: var(--shadow);
+    margin-bottom: 24px;
+  }
+  .import-panel.open { display: block; }
+  .import-panel label {
+    display: block;
+    font-weight: 600;
+    font-size: 0.85rem;
+    margin-bottom: 8px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .import-panel textarea {
+    width: 100%;
+    height: 160px;
+    font-family: monospace;
+    font-size: 0.85rem;
+    padding: 12px;
+    border: 2px solid var(--border);
+    border-radius: 6px;
+    background: var(--paper);
+    color: var(--ink);
+    resize: vertical;
+    outline: none;
+    transition: border 0.15s;
+  }
+  .import-panel textarea:focus { border-color: var(--ink); }
+  .import-panel .hint {
+    font-size: 0.78rem;
+    color: var(--muted);
+    margin: 8px 0 16px;
+    line-height: 1.5;
+  }
+  .import-panel .hint code {
+    background: var(--border);
+    padding: 1px 5px;
+    border-radius: 3px;
+    font-family: monospace;
+  }
+  .panel-actions { display: flex; gap: 10px; }
+  .btn-confirm {
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 600;
+    font-size: 0.85rem;
+    padding: 10px 22px;
+    background: var(--accent);
+    color: white;
+    border: 2px solid var(--ink);
+    border-radius: 6px;
+    cursor: pointer;
+    box-shadow: 3px 3px 0px var(--ink);
+    transition: all 0.1s;
+  }
+  .btn-confirm:hover { transform: translate(-1px,-1px); box-shadow: 4px 4px 0px var(--ink); }
+  .btn-cancel {
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 500;
+    font-size: 0.85rem;
+    padding: 10px 20px;
+    background: transparent;
+    color: var(--muted);
+    border: 2px solid var(--border);
+    border-radius: 6px;
+    cursor: pointer;
+  }
+
+  /* WORD LIST */
+  .word-list-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 10px;
+    margin-top: 8px;
+  }
+  .word-chip {
+    background: var(--card);
+    border: 1.5px solid var(--border);
+    border-radius: 6px;
+    padding: 10px 12px;
+    font-size: 0.82rem;
+  }
+  .word-chip .en { font-weight: 600; margin-bottom: 3px; }
+  .word-chip .zh { color: var(--muted); font-size: 0.78rem; }
+
+  /* FLASHCARD */
+  .fc-settings {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+  }
+  .fc-settings label { font-size: 0.85rem; font-weight: 500; }
+  .fc-settings input[type=number] {
+    width: 60px;
+    padding: 6px 8px;
+    border: 2px solid var(--ink);
+    border-radius: 6px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.9rem;
+    background: var(--paper);
+    outline: none;
+  }
+  .start-btn {
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 600;
+    font-size: 0.85rem;
+    padding: 9px 22px;
+    background: var(--accent2);
+    color: white;
+    border: 2px solid var(--ink);
+    border-radius: 6px;
+    cursor: pointer;
+    box-shadow: 3px 3px 0px var(--ink);
+    transition: all 0.1s;
+  }
+  .start-btn:hover { transform: translate(-1px,-1px); box-shadow: 4px 4px 0 var(--ink); }
+
+  /* CARD */
+  .card-area { perspective: 1000px; margin-bottom: 24px; }
+  .card-wrapper {
+    position: relative;
+    width: 100%;
+    height: 220px;
+    transform-style: preserve-3d;
+    transition: transform 0.5s cubic-bezier(0.4,0,0.2,1);
+    cursor: pointer;
+  }
+  .card-wrapper.flipped { transform: rotateY(180deg); }
+
+  .card-face {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    backface-visibility: hidden;
+    border: 2px solid var(--ink);
+    border-radius: 12px;
+    background: var(--card);
+    box-shadow: var(--shadow);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    user-select: none;
+  }
+  .card-face.back { transform: rotateY(180deg); }
+  .card-face .en-word {
+    font-family: 'DM Serif Display', serif;
+    font-size: 2.4rem;
+    letter-spacing: -1px;
+    margin-bottom: 8px;
+  }
+  .card-face .zh-def {
+    font-size: 1.3rem;
+    color: var(--muted);
+    text-align: center;
+    line-height: 1.6;
+  }
+  .card-face .hint-tap {
+    position: absolute;
+    bottom: 14px;
+    font-size: 0.72rem;
+    color: var(--border);
+    font-weight: 500;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+  .card-face .card-label {
+    position: absolute;
+    top: 12px;
+    left: 16px;
+    font-size: 0.68rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--muted);
+  }
+
+  .progress-bar-wrap {
+    background: var(--border);
+    height: 4px;
+    border-radius: 2px;
+    margin-bottom: 16px;
+    overflow: hidden;
+  }
+  .progress-bar {
+    height: 100%;
+    background: var(--accent2);
+    border-radius: 2px;
+    transition: width 0.3s;
+  }
+
+  .card-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .nav-btn {
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 600;
+    font-size: 0.85rem;
+    padding: 10px 24px;
+    background: var(--ink);
+    color: var(--paper);
+    border: 2px solid var(--ink);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.1s;
+    box-shadow: 3px 3px 0 rgba(0,0,0,0.2);
+  }
+  .nav-btn:hover { opacity: 0.85; }
+  .nav-btn:disabled { opacity: 0.3; cursor: default; }
+  .card-counter { font-weight: 600; color: var(--muted); font-size: 0.9rem; }
+
+  /* QUIZ */
+  .quiz-q {
+    background: var(--card);
+    border: 2px solid var(--ink);
+    border-radius: 10px;
+    padding: 28px 24px;
+    text-align: center;
+    margin-bottom: 20px;
+    box-shadow: var(--shadow);
+  }
+  .quiz-q .q-label {
+    font-size: 0.72rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--muted);
+    margin-bottom: 10px;
+  }
+  .quiz-q .q-word {
+    font-family: 'DM Serif Display', serif;
+    font-size: 2.2rem;
+    letter-spacing: -0.5px;
+  }
+  .options-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  .option-btn {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 500;
+    padding: 14px 12px;
+    background: var(--card);
+    color: var(--ink);
+    border: 2px solid var(--border);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.15s;
+    text-align: center;
+    line-height: 1.4;
+  }
+  .option-btn:hover:not(:disabled) { border-color: var(--ink); background: var(--paper); }
+  .option-btn.correct { background: #d8f3dc; border-color: var(--correct); color: var(--correct); }
+  .option-btn.wrong { background: #fde8e4; border-color: var(--wrong); color: var(--wrong); }
+  .option-btn:disabled { cursor: default; }
+
+  .quiz-next {
+    display: none;
+    margin: 0 auto;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 600;
+    font-size: 0.9rem;
+    padding: 12px 28px;
+    background: var(--ink);
+    color: var(--paper);
+    border: 2px solid var(--ink);
+    border-radius: 6px;
+    cursor: pointer;
+    box-shadow: var(--shadow);
+    transition: all 0.1s;
+  }
+  .quiz-next:hover { transform: translate(-1px,-1px); box-shadow: 5px 5px 0 var(--ink); }
+  .quiz-next.show { display: block; }
+
+  /* SPELLING */
+  .spell-input-wrap { margin-bottom: 16px; }
+  .spell-input-wrap input {
+    width: 100%;
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.8rem;
+    letter-spacing: 2px;
+    padding: 16px 20px;
+    border: 2px solid var(--ink);
+    border-radius: 8px;
+    background: var(--card);
+    color: var(--ink);
+    outline: none;
+    text-align: center;
+    box-shadow: var(--shadow);
+  }
+  .spell-input-wrap input:focus { border-color: var(--accent); }
+  .spell-input-wrap input.correct-input { border-color: var(--correct); background: #d8f3dc; }
+  .spell-input-wrap input.wrong-input { border-color: var(--wrong); background: #fde8e4; }
+
+  .spell-actions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+  .spell-hint {
+    font-size: 0.8rem;
+    color: var(--muted);
+    text-align: center;
+    margin-top: 10px;
+    min-height: 20px;
+  }
+  .correct-answer-reveal { color: var(--correct); font-weight: 600; }
+  .wrong-answer-reveal { color: var(--wrong); }
+
+  /* RESULTS */
+  .results-box {
+    background: var(--card);
+    border: 2px solid var(--ink);
+    border-radius: 10px;
+    padding: 28px 24px;
+    margin-bottom: 20px;
+    box-shadow: var(--shadow);
+  }
+  .score-big {
+    font-family: 'DM Serif Display', serif;
+    font-size: 3rem;
+    text-align: center;
+    margin-bottom: 6px;
+  }
+  .score-sub { text-align: center; color: var(--muted); font-size: 0.9rem; margin-bottom: 24px; }
+
+  .wrong-list { display: flex; flex-direction: column; gap: 10px; }
+  .wrong-item {
+    border: 1.5px solid var(--wrong);
+    border-radius: 6px;
+    padding: 12px 16px;
+    background: #fde8e4;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 8px;
+    font-size: 0.88rem;
+  }
+  .wrong-item .wi-en { font-weight: 700; }
+  .wrong-item .wi-zh { color: var(--muted); font-size: 0.8rem; }
+  .wrong-item .wi-yours { color: var(--wrong); font-size: 0.8rem; }
+
+  .results-actions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 20px; }
+
+  .empty-state {
+    text-align: center;
+    padding: 48px 24px;
+    color: var(--muted);
+  }
+  .empty-state .big { font-size: 2.5rem; margin-bottom: 12px; }
+  .empty-state p { font-size: 0.9rem; line-height: 1.6; }
+
+  .quiz-mode-selector { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
+  .mode-chip {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 500;
+    padding: 7px 14px;
+    border: 2px solid var(--border);
+    border-radius: 20px;
+    background: var(--card);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .mode-chip.selected { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+
+  .section-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.3rem;
+    margin-bottom: 4px;
+  }
+  .section-desc { font-size: 0.82rem; color: var(--muted); margin-bottom: 20px; }
+
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: var(--ink);
+    color: var(--paper);
+    padding: 10px 22px;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    transition: transform 0.3s;
+    z-index: 999;
+    pointer-events: none;
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>單字<span>卡</span></h1>
+  <span class="word-count" id="wordCount">尚無單字</span>
+</header>
+
+<nav>
+  <button class="active" data-tab="home" onclick="switchTab('home')">📋 單字庫</button>
+  <button data-tab="flash" onclick="switchTab('flash')">🃏 翻卡練習</button>
+  <button data-tab="quiz" onclick="switchTab('quiz')">🎯 選擇題</button>
+  <button data-tab="spell" onclick="switchTab('spell')">✏️ 拼字練習</button>
+</nav>
+
+<main>
+
+  <!-- HOME / WORD LIST -->
+  <div class="section active" id="tab-home">
+    <button class="import-btn" onclick="toggleImport()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      匯入單字表
+    </button>
+
+    <div class="import-panel" id="importPanel">
+      <label>貼上單字表</label>
+      <textarea id="importText" placeholder="apple,蘋果
+banana,香蕉,芭蕉
+run,跑,奔跑,運行
+..."></textarea>
+      <p class="hint">格式：<code>單字,中文1,中文2...</code>，每行一個單字</p>
+      <div class="panel-actions">
+        <button class="btn-confirm" onclick="importWords()">確認匯入</button>
+        <button class="btn-cancel" onclick="toggleImport()">取消</button>
+      </div>
+    </div>
+
+    <div id="wordListDisplay">
+      <div class="empty-state">
+        <div class="big">📖</div>
+        <p>還沒有單字<br>點上方「匯入單字表」開始吧</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- FLASHCARD -->
+  <div class="section" id="tab-flash">
+    <div class="section-title">翻卡練習</div>
+    <div class="section-desc">點卡片查看翻譯，左右切換</div>
+
+    <div class="fc-settings">
+      <label>題數</label>
+      <input type="number" id="fcCount" value="10" min="1" max="200">
+      <button class="start-btn" onclick="startFlash()">開始練習</button>
+    </div>
+
+    <div id="flashArea" style="display:none">
+      <div class="progress-bar-wrap"><div class="progress-bar" id="fcBar"></div></div>
+      <div class="card-area">
+        <div class="card-wrapper" id="cardWrapper" onclick="flipCard()">
+          <div class="card-face front" id="cardFront">
+            <span class="card-label">英文</span>
+            <div class="en-word" id="fcWord"></div>
+            <span class="hint-tap">點擊翻面</span>
+          </div>
+          <div class="card-face back" id="cardBack">
+            <span class="card-label">中文</span>
+            <div class="zh-def" id="fcDef"></div>
+          </div>
+        </div>
+      </div>
+      <div class="card-nav">
+        <button class="nav-btn" id="fcPrev" onclick="moveCard(-1)">← 上一張</button>
+        <span class="card-counter" id="fcCounter">1 / 10</span>
+        <button class="nav-btn" id="fcNext" onclick="moveCard(1)">下一張 →</button>
+      </div>
+    </div>
+
+    <div id="flashEmpty" class="empty-state">
+      <div class="big">🃏</div>
+      <p>先匯入單字才能練習</p>
+    </div>
+  </div>
+
+  <!-- QUIZ -->
+  <div class="section" id="tab-quiz">
+    <div class="section-title">選擇題練習</div>
+    <div class="section-desc">四選一，測試你的記憶</div>
+
+    <div id="quizSetup">
+      <div class="quiz-mode-selector">
+        <button class="mode-chip selected" onclick="setQuizMode('en2zh', this)">英文 → 選中文</button>
+        <button class="mode-chip" onclick="setQuizMode('zh2en', this)">中文 → 選英文</button>
+      </div>
+      <div class="fc-settings">
+        <label>題數</label>
+        <input type="number" id="quizCount" value="10" min="1" max="200">
+        <button class="start-btn" onclick="startQuiz()">開始測驗</button>
+      </div>
+      <div id="quizEmpty" class="empty-state" style="display:none">
+        <div class="big">🎯</div>
+        <p>先匯入單字才能測驗<br>（至少需要 4 個單字）</p>
+      </div>
+    </div>
+
+    <div id="quizArea" style="display:none">
+      <div class="progress-bar-wrap"><div class="progress-bar" id="qBar"></div></div>
+      <div class="quiz-q">
+        <div class="q-label" id="qLabel">請選出正確翻譯</div>
+        <div class="q-word" id="qWord"></div>
+      </div>
+      <div class="options-grid" id="optionsGrid"></div>
+      <div style="text-align:center">
+        <button class="quiz-next" id="quizNext" onclick="nextQuiz()">下一題 →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SPELLING -->
+  <div class="section" id="tab-spell">
+    <div class="section-title">拼字練習</div>
+    <div class="section-desc">看中文提示，拼出英文單字</div>
+
+    <div id="spellSetup">
+      <div class="fc-settings">
+        <label>題數</label>
+        <input type="number" id="spellCount" value="10" min="1" max="200">
+        <button class="start-btn" onclick="startSpell()">開始練習</button>
+      </div>
+      <div id="spellEmpty" class="empty-state" style="display:none">
+        <div class="big">✏️</div>
+        <p>先匯入單字才能練習</p>
+      </div>
+    </div>
+
+    <div id="spellArea" style="display:none">
+      <div class="progress-bar-wrap"><div class="progress-bar" id="sBar"></div></div>
+      <div class="quiz-q">
+        <div class="q-label">請拼出英文單字</div>
+        <div class="q-word" id="sWord"></div>
+      </div>
+      <div class="spell-input-wrap">
+        <input type="text" id="spellInput" placeholder="輸入拼法..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" onkeydown="if(event.key==='Enter')checkSpell()">
+      </div>
+      <div class="spell-hint" id="spellHint"></div>
+      <div class="spell-actions">
+        <button class="start-btn" onclick="checkSpell()" id="spellCheckBtn">確認</button>
+        <button class="btn-cancel" style="border:2px solid var(--border)" id="spellNextBtn" onclick="nextSpell()" style="display:none">下一題</button>
+        <button class="btn-cancel" onclick="revealSpell()">提示</button>
+      </div>
+      <div style="text-align:center;margin-top:10px">
+        <span class="card-counter" id="sCounter"></span>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ─── STATE ───────────────────────────────────────────
+let words = []; // [{en, zh: []}]
+let currentSession = [];
+let sessionIdx = 0;
+let quizMode = 'en2zh';
+let quizWrong = [];
+let spellWrong = [];
+let quizAnswered = false;
+let spellAnswered = false;
+let fcFlipped = false;
+
+// ─── UTILS ───────────────────────────────────────────
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2200);
+}
+function setProgress(id, cur, total) {
+  document.getElementById(id).style.width = (cur / total * 100) + '%';
+}
+
+// ─── TAB ─────────────────────────────────────────────
+function switchTab(tab) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  document.querySelector(`[data-tab="${tab}"]`).classList.add('active');
+}
+
+// ─── IMPORT ──────────────────────────────────────────
+function toggleImport() {
+  const p = document.getElementById('importPanel');
+  p.classList.toggle('open');
+  if (p.classList.contains('open')) document.getElementById('importText').focus();
+}
+
+function importWords() {
+  const raw = document.getElementById('importText').value.trim();
+  if (!raw) { showToast('請貼上單字表內容'); return; }
+
+  const lines = raw.split('\n');
+  const parsed = [];
+  for (const line of lines) {
+    const parts = line.split(',').map(s => s.trim()).filter(Boolean);
+    if (parts.length < 2) continue;
+    parsed.push({ en: parts[0], zh: parts.slice(1) });
+  }
+  if (!parsed.length) { showToast('格式有誤，請重新檢查'); return; }
+
+  words = parsed;
+  document.getElementById('importText').value = '';
+  document.getElementById('importPanel').classList.remove('open');
+  renderWordList();
+  updateWordCount();
+  showToast(`✓ 已匯入 ${words.length} 個單字`);
+}
+
+function updateWordCount() {
+  document.getElementById('wordCount').textContent =
+    words.length ? `${words.length} 個單字` : '尚無單字';
+}
+
+function renderWordList() {
+  const el = document.getElementById('wordListDisplay');
+  if (!words.length) {
+    el.innerHTML = `<div class="empty-state"><div class="big">📖</div><p>還沒有單字<br>點上方「匯入單字表」開始吧</p></div>`;
+    return;
+  }
+  el.innerHTML = `<div class="word-list-grid">${words.map(w => `
+    <div class="word-chip">
+      <div class="en">${w.en}</div>
+      <div class="zh">${w.zh.join('、')}</div>
+    </div>`).join('')}</div>`;
+}
+
+// ─── FLASHCARD ───────────────────────────────────────
+function startFlash() {
+  if (!words.length) { showToast('請先匯入單字'); return; }
+  const n = Math.min(parseInt(document.getElementById('fcCount').value) || 10, words.length);
+  currentSession = shuffle(words).slice(0, n);
+  sessionIdx = 0;
+  document.getElementById('flashArea').style.display = 'block';
+  document.getElementById('flashEmpty').style.display = 'none';
+  showFlashCard();
+}
+
+function showFlashCard() {
+  const w = currentSession[sessionIdx];
+  document.getElementById('fcWord').textContent = w.en;
+  document.getElementById('fcDef').textContent = w.zh.join(' / ');
+  fcFlipped = false;
+  const cw = document.getElementById('cardWrapper');
+  cw.classList.remove('flipped');
+  setProgress('fcBar', sessionIdx + 1, currentSession.length);
+  document.getElementById('fcCounter').textContent = `${sessionIdx + 1} / ${currentSession.length}`;
+  document.getElementById('fcPrev').disabled = sessionIdx === 0;
+  document.getElementById('fcNext').disabled = sessionIdx === currentSession.length - 1;
+}
+
+function flipCard() {
+  fcFlipped = !fcFlipped;
+  document.getElementById('cardWrapper').classList.toggle('flipped', fcFlipped);
+}
+
+function moveCard(dir) {
+  const next = sessionIdx + dir;
+  if (next < 0 || next >= currentSession.length) return;
+  sessionIdx = next;
+  showFlashCard();
+}
+
+// ─── QUIZ ────────────────────────────────────────────
+function setQuizMode(mode, btn) {
+  quizMode = mode;
+  document.querySelectorAll('.mode-chip').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+}
+
+function startQuiz() {
+  if (words.length < 4) {
+    document.getElementById('quizEmpty').style.display = 'block';
+    return;
+  }
+  const n = Math.min(parseInt(document.getElementById('quizCount').value) || 10, words.length);
+  currentSession = shuffle(words).slice(0, n);
+  sessionIdx = 0;
+  quizWrong = [];
+  document.getElementById('quizSetup').style.display = 'none';
+  document.getElementById('quizArea').style.display = 'block';
+  showQuiz();
+}
+
+function showQuiz() {
+  if (sessionIdx >= currentSession.length) { showQuizResults(); return; }
+  quizAnswered = false;
+  const q = currentSession[sessionIdx];
+  setProgress('qBar', sessionIdx, currentSession.length);
+
+  // pick 3 wrong options
+  const others = shuffle(words.filter(w => w.en !== q.en)).slice(0, 3);
+  const allOpts = shuffle([q, ...others]);
+
+  if (quizMode === 'en2zh') {
+    document.getElementById('qLabel').textContent = '請選出正確的中文翻譯';
+    document.getElementById('qWord').textContent = q.en;
+    renderOptions(allOpts, o => o.zh.join(' / '), q.zh.join(' / '));
+  } else {
+    document.getElementById('qLabel').textContent = '請選出正確的英文單字';
+    document.getElementById('qWord').textContent = q.zh.join(' / ');
+    renderOptions(allOpts, o => o.en, q.en);
+  }
+
+  document.getElementById('quizNext').classList.remove('show');
+}
+
+function renderOptions(opts, labelFn, correctLabel) {
+  const grid = document.getElementById('optionsGrid');
+  grid.innerHTML = '';
+  opts.forEach(o => {
+    const label = labelFn(o);
+    const btn = document.createElement('button');
+    btn.className = 'option-btn';
+    btn.textContent = label;
+    btn.dataset.label = label;
+    btn.dataset.correct = correctLabel;
+    btn.addEventListener('click', () => selectOption(btn));
+    grid.appendChild(btn);
+  });
+}
+
+function selectOption(btn) {
+  if (quizAnswered) return;
+  quizAnswered = true;
+  const chosen = btn.dataset.label;
+  const correct = btn.dataset.correct;
+  const q = currentSession[sessionIdx];
+  document.querySelectorAll('.option-btn').forEach(b => {
+    b.disabled = true;
+    if (b.dataset.label === correct) b.classList.add('correct');
+  });
+  if (chosen !== correct) {
+    btn.classList.add('wrong');
+    quizWrong.push({ en: q.en, zh: q.zh.join(' / '), yours: chosen });
+  }
+  document.getElementById('quizNext').classList.add('show');
+}
+
+function nextQuiz() {
+  sessionIdx++;
+  showQuiz();
+}
+
+function showQuizResults() {
+  document.getElementById('quizArea').style.display = 'none';
+  document.getElementById('quizSetup').style.display = 'block';
+  showResults('quiz');
+}
+
+// ─── SPELLING ────────────────────────────────────────
+function startSpell() {
+  if (!words.length) { document.getElementById('spellEmpty').style.display = 'block'; return; }
+  const n = Math.min(parseInt(document.getElementById('spellCount').value) || 10, words.length);
+  currentSession = shuffle(words).slice(0, n);
+  sessionIdx = 0;
+  spellWrong = [];
+  document.getElementById('spellSetup').style.display = 'none';
+  document.getElementById('spellArea').style.display = 'block';
+  showSpell();
+}
+
+function showSpell() {
+  if (sessionIdx >= currentSession.length) { showSpellResults(); return; }
+  spellAnswered = false;
+  const w = currentSession[sessionIdx];
+  document.getElementById('sWord').textContent = w.zh.join(' / ');
+  document.getElementById('spellInput').value = '';
+  document.getElementById('spellInput').className = '';
+  document.getElementById('spellInput').disabled = false;
+  document.getElementById('spellHint').textContent = '';
+  document.getElementById('spellCheckBtn').style.display = '';
+  document.getElementById('spellNextBtn').style.display = 'none';
+  setProgress('sBar', sessionIdx, currentSession.length);
+  document.getElementById('sCounter').textContent = `${sessionIdx + 1} / ${currentSession.length}`;
+  document.getElementById('spellInput').focus();
+}
+
+function checkSpell() {
+  if (spellAnswered) return;
+  const ans = document.getElementById('spellInput').value.trim().toLowerCase();
+  const correct = currentSession[sessionIdx].en.toLowerCase();
+  spellAnswered = true;
+  document.getElementById('spellInput').disabled = true;
+  document.getElementById('spellCheckBtn').style.display = 'none';
+  document.getElementById('spellNextBtn').style.display = '';
+
+  if (ans === correct) {
+    document.getElementById('spellInput').classList.add('correct-input');
+    document.getElementById('spellHint').innerHTML = `<span class="correct-answer-reveal">✓ 答對了！</span>`;
+  } else {
+    document.getElementById('spellInput').classList.add('wrong-input');
+    document.getElementById('spellHint').innerHTML =
+      `<span class="wrong-answer-reveal">✗ 答錯了</span>　正確答案：<span class="correct-answer-reveal">${currentSession[sessionIdx].en}</span>`;
+    spellWrong.push({ en: currentSession[sessionIdx].en, zh: currentSession[sessionIdx].zh.join(' / '), yours: ans });
+  }
+}
+
+function revealSpell() {
+  const w = currentSession[sessionIdx];
+  const hint = w.en.split('').map((c,i) => i < 2 ? c : '_').join(' ');
+  document.getElementById('spellHint').textContent = `提示：${hint}`;
+}
+
+function nextSpell() {
+  sessionIdx++;
+  showSpell();
+}
+
+function showSpellResults() {
+  document.getElementById('spellArea').style.display = 'none';
+  document.getElementById('spellSetup').style.display = 'block';
+  showResults('spell');
+}
+
+// ─── RESULTS ─────────────────────────────────────────
+function showResults(mode) {
+  const wrong = mode === 'quiz' ? quizWrong : spellWrong;
+  const total = currentSession.length;
+  const correct = total - wrong.length;
+  const pct = Math.round(correct / total * 100);
+
+  const modal = document.createElement('div');
+  modal.id = 'resultsModal';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(26,26,46,0.6);z-index:100;display:flex;align-items:center;justify-content:center;padding:20px';
+
+  const inner = document.createElement('div');
+  inner.style.cssText = 'background:var(--card);border:2px solid var(--ink);border-radius:12px;padding:32px 28px;max-width:520px;width:100%;max-height:80vh;overflow-y:auto;box-shadow:var(--shadow)';
+
+  const scoreEl = document.createElement('div');
+  scoreEl.className = 'score-big';
+  scoreEl.textContent = pct + '%';
+  inner.appendChild(scoreEl);
+
+  const subEl = document.createElement('div');
+  subEl.className = 'score-sub';
+  subEl.textContent = correct + ' / ' + total + ' 答對　' + (wrong.length > 0 ? wrong.length + ' 題答錯' : '全部正確 🎉');
+  inner.appendChild(subEl);
+
+  if (wrong.length) {
+    const lbl = document.createElement('div');
+    lbl.style.cssText = 'font-weight:600;font-size:0.82rem;text-transform:uppercase;letter-spacing:0.5px;color:var(--muted);margin:12px 0 8px';
+    lbl.textContent = '錯誤題目';
+    inner.appendChild(lbl);
+
+    const list = document.createElement('div');
+    list.className = 'wrong-list';
+    wrong.forEach(function(w) {
+      const item = document.createElement('div');
+      item.className = 'wrong-item';
+      const enEl = document.createElement('div');
+      enEl.className = 'wi-en';
+      enEl.textContent = w.en;
+      const zhEl = document.createElement('div');
+      zhEl.className = 'wi-zh';
+      zhEl.textContent = w.zh;
+      item.appendChild(enEl);
+      item.appendChild(zhEl);
+      if (w.yours !== undefined) {
+        const yoursEl = document.createElement('div');
+        yoursEl.className = 'wi-yours';
+        yoursEl.textContent = '你的答案：' + (w.yours || '（未作答）');
+        item.appendChild(yoursEl);
+      }
+      list.appendChild(item);
+    });
+    inner.appendChild(list);
+  }
+
+  const actions = document.createElement('div');
+  actions.className = 'results-actions';
+  const closeBtn = document.createElement('button');
+  closeBtn.className = 'btn-confirm';
+  closeBtn.textContent = '關閉';
+  closeBtn.addEventListener('click', function() { modal.remove(); });
+  actions.appendChild(closeBtn);
+  inner.appendChild(actions);
+
+  modal.appendChild(inner);
+  modal.addEventListener('click', function(e) { if (e.target === modal) modal.remove(); });
+  document.body.appendChild(modal);
+}
+
+// ─── INIT ─────────────────────────────────────────────
+updateWordCount();
+renderWordList();
+
+// init flash
+document.getElementById('flashArea').style.display = 'none';
+document.getElementById('flashEmpty').style.display = 'block';
+</script>
+</body>
+</html>
